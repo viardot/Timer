@@ -1,0 +1,17 @@
+INSERT INTO Activity Values  ('CSR', true);
+INSERT INTO Activity Values  ('Excused Leave', true);
+INSERT INTO Activity Values  ('Human Resource', true);
+INSERT INTO Activity Values  ('Inwerken', true);
+INSERT INTO Activity Values  ('IT Management', true);
+INSERT INTO Activity Values  ('IT Resource and Improvements', true);
+INSERT INTO Activity Values  ('Marketing & Branding BearingPoint', true);
+INSERT INTO Activity Values  ('Personal Admin', true);
+INSERT INTO Activity Values  ('Practice Development AUA', true);
+INSERT INTO Activity Values  ('Practice Development CUR', true);
+INSERT INTO Activity Values  ('Practice Development International', true);
+INSERT INTO Activity Values  ('Practice Development SXM', true);
+INSERT INTO Activity Values  ('Practice Meetings', true);
+INSERT INTO Activity Values  ('Sick', true);
+INSERT INTO Activity Values  ('Study', true);
+INSERT INTO Activity Values  ('Vacation', true);
+INSERT INTO Activity Values  ('Waiting for Work', true);

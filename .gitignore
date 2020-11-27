@@ -1,0 +1,8 @@
+bin/
+build/
+.settings/
+data/*
+src/application/
+/build.fxbuild
+/.classpath
+/.project
