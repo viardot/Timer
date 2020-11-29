@@ -1,4 +1,7 @@
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -161,10 +164,21 @@ public class DataBase {
        	Integer insertTrigger = stmt.executeUpdate(sql);       	
     }
 
-    private static void loadInitialData (Connection con, String file) throws IOException, SqlToolError, SQLException {
-    	SqlFile sf = new SqlFile(new File(file));
-        sf.setConnection(con);
-        sf.execute();
+    private static void loadInitialData (Connection con, String file) throws IOException, SQLException {
+        Statement stmt = con.createStatement();
+        BufferedReader br = null;
+        try {
+ 	       br = new BufferedReader(new FileReader(file));
+ 	       String sql = br.readLine();
+ 	       while (sql != null) {
+ 	           stmt.executeQuery(sql);
+ 	           sql = br.readLine();
+ 	       }
+ 	   } catch (FileNotFoundException e) {
+ 	       e.printStackTrace();
+ 	   } finally {
+ 		   br.close();
+ 	   }
     }
 
     public static void closeActivityTask (String Activity, String Task) throws ClassNotFoundException, SQLException {
