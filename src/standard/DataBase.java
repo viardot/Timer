@@ -43,8 +43,7 @@ public class DataBase {
 	    List<String> Task;
 		
 		getProperties();
-		System.out.println(TaskDB);
-	    
+			    
 	    try {
 			
 	    	con = connectDB ();
