@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Database Settings</comment>
+<entry key="ActivityDB">./SQL/Timer_Activities_data.sql</entry>
+<entry key="TaskDB">./SQL/Timer_Tasks_data.sql</entry>
+<entry key="JDBCDriver">org.hsqldb.jdbc.JDBCDriver</entry>
+<entry key="Connection">jdbc:hsqldb:file:data/Timer</entry>
+<entry key="Username">SA</entry>
+<entry key="Password"></entry>
+</properties>

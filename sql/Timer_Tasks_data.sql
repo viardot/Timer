@@ -25,3 +25,5 @@ INSERT INTO Task VALUES (0, 'CRM system maintenance', 'IT Management', true);
 INSERT INTO Task VALUES (0, 'Cloudforge - SVN', 'IT Management', true);
 INSERT INTO Task VALUES (0, 'General IT', 'IT Management', true);
 INSERT INTO Task VALUES (0, 'Team City', 'IT Management', true);
+INSERT INTO Task VALUES (0, 'Operations B&M', 'Marketing & Branding BearingPoint', true);
+INSERT INTO Task VALUES (0, 'Content Recruitment', 'Marketing & Branding BearingPoint', true);
