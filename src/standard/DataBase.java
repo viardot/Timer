@@ -1,8 +1,11 @@
 package standard;
 
-import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.InputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -11,18 +14,26 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.InvalidPropertiesFormatException;
+import java.util.Properties;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hsqldb.cmdline.SqlFile;
+import org.hsqldb.cmdline.SqlToolError;								  								   
 import org.hsqldb.util.DatabaseManagerSwing;
 
 
 public class DataBase {
 	
-	private static final String ActivityDB = "./SQL/Timer_Activities_data.sql";
-	private static final String TaskDB = "./SQL/Timer_Tasks_data.sql";
+	private static String ActivityDB = null;
+	private static String TaskDB     = null;
+	private static String JDBCDriver = null;
+	private static String Connection = null;
+	private static String Username   = null;
+	private static String Password   = null;
 	
     public static Map<String, List<String>> initiateDate () {
 	    Connection con = null;
@@ -30,6 +41,9 @@ public class DataBase {
 	    
 	    Map<String, List<String>> Activity = new HashMap<>();
 	    List<String> Task;
+		
+		getProperties();
+		System.out.println(TaskDB);
 	    
 	    try {
 			
@@ -100,14 +114,42 @@ public class DataBase {
 	    return Activity;
      }
 
+	private static void getProperties() {
+		
+		Properties prop = new Properties();
+		String fileName = "./resources/config.xml";
+
+		
+		InputStream in;
+		try {
+			in = new FileInputStream(fileName);
+			if (in != null) {
+				prop.loadFromXML(in);
+			}
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		} catch (InvalidPropertiesFormatException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		ActivityDB = prop.getProperty("ActivityDB");
+        TaskDB     = prop.getProperty("TaskDB");
+        JDBCDriver = prop.getProperty("JDBCDriver");
+        Connection = prop.getProperty("Connection");
+        Username   = prop.getProperty("Username");
+        Password   = prop.getProperty("Password");
+	}
+
     private static Connection connectDB () throws ClassNotFoundException, SQLException {
-    	final String JDBCDriver = "org.hsqldb.jdbc.JDBCDriver";
-    	final String Connection = "jdbc:hsqldb:file:data/Timer";
-    	final String UserName = "SA";
-    	final String Password = "";
+    	//final String JDBCDriver = "org.hsqldb.jdbc.JDBCDriver";
+    	//final String Connection = "jdbc:hsqldb:file:data/Timer";
+    	//final String UserName = "SA";
+    	//final String Password = "";
     	
 		Class.forName(JDBCDriver);
-		return DriverManager.getConnection(Connection, UserName, Password);
+		return DriverManager.getConnection(Connection, Username, Password);
     }
       
     public static void writeDB (String sql) throws ClassNotFoundException, SQLException {
