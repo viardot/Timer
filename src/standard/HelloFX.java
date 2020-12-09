@@ -24,7 +24,6 @@ import javafx.stage.Stage;
 
 public class HelloFX extends Application {
 
-	
     @Override
     public void start(Stage primaryStage) {
     	
@@ -48,9 +47,15 @@ public class HelloFX extends Application {
         	    );
         	    
         	final ComboBox<String> cmbBxActivities = new ComboBox<>(Activities);
+			cmbBxActivities.setPromptText("Activity");
+			cmbBxActivities.setEditable(true);
+			cmbBxActivities.setDisable(false);
         grid.add(cmbBxActivities, 1, 1);
         
     	    final ComboBox<String> cmbBxTasks = new ComboBox<>();
+			cmbBxTasks.setPromptText("Tasks");
+			cmbBxTasks.setEditable(false);
+			cmbBxTasks.setDisable(true);
         grid.add(cmbBxTasks, 2, 1);
         
         TextField userTextField = new TextField();
@@ -101,37 +106,64 @@ public class HelloFX extends Application {
         	@Override
         	public void handle(ActionEvent e ) {
         		btnStart.setDisable(false);
-                ObservableList<String> Tasks = 
+				ObservableList<String> Tasks = null;
+				if (Activity.containsKey(cmbBxActivities.getValue())) {
+				    Tasks = 
                 	    FXCollections.observableArrayList(
                 	        Activity.get(cmbBxActivities.getValue())
                 	    );
-                cmbBxTasks.setItems(Tasks);
+                }
+				cmbBxTasks.setItems(Tasks);
+				cmbBxTasks.setEditable(true);
+				cmbBxTasks.setDisable(false);
+				
         	}
         });
         
         btnStart.setOnAction(new EventHandler<ActionEvent>() {
        	 
             @Override
-            public void handle(ActionEvent e) {
+            public void handle(ActionEvent e){
                 if (cmbBxActivities.getValue() != null  && userTextField.getLength() != 0) {
                     btnStop.setDisable(false);
                     btnStart.setDisable(true);
                     cmbBxActivities.setDisable(true);
                     cmbBxTasks.setDisable(true);
                     userTextField.setDisable(true);
+					
+					String sql[] = new String[3];
+					
+					if (!Activity.containsKey(cmbBxActivities.getValue())) {
+						sql[0] = "INSERT INTO Activity (ActivityName, isActive) VALUES ('" + cmbBxActivities.getValue() + "', true)";
+						if (cmbBxTasks.getValue() != null) {
+							sql[1] = "INSERT INTO Task (TaskID, TaskName, ActivityName, isActive) VALUES (0,'" + cmbBxTasks.getValue() + "', '" + cmbBxActivities.getValue() + "', true)";
+						}
+					}
+					
+					if (Activity.containsKey(cmbBxActivities.getValue())) {
+                        if(!Activity.get(cmbBxActivities.getValue()).contains(cmbBxTasks.getValue())) {
+					       sql[1] = "INSERT INTO Task (TaskID, TaskName, ActivityName, isActive) VALUES (0,'" + cmbBxTasks.getValue() + "', '" + cmbBxActivities.getValue() + "', true)";
+                           System.out.println(sql[1]);
+						}						
+					}
 
-                    String sql = "INSERT INTO TimeSpend (Description, ActivityName, TaskID, Date, StartTime, EndTime, isActive)\r\n" +
+                    sql[2] = "INSERT INTO TimeSpend (Description, ActivityName, TaskID, Date, StartTime, EndTime, isActive)\r\n" +
                              "VALUES ('" + userTextField.getText() + "', '" +  cmbBxActivities.getValue() + "', " +
                              "(SELECT TaskID FROM Task WHERE TaskName = '" + cmbBxTasks.getValue() + "'), '" + LocalDate.now() + "', '" +
                              LocalTime.now() + "', '" + LocalTime.now() + "', true)";
-                    
-                    try {
-					    DataBase.writeDB(sql);
-				    } catch (ClassNotFoundException e1) {
-					    e1.printStackTrace();
-				    } catch (SQLException e1) {
-					    e1.printStackTrace();
-				    }
+					
+					for(int i = 0; i < sql.length; i++ ){
+						if (sql[i] != null) {	
+                            try {
+					            DataBase.writeDB(sql[i]);
+				            } catch (ClassNotFoundException e1) {
+					            e1.printStackTrace();
+				            } catch (SQLException e1) {
+					           e1.printStackTrace();
+				            }
+						}
+					}
+					
                 }
             }
         });

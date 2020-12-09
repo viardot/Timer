@@ -142,10 +142,6 @@ public class DataBase {
 	}
 
     private static Connection connectDB () throws ClassNotFoundException, SQLException {
-    	//final String JDBCDriver = "org.hsqldb.jdbc.JDBCDriver";
-    	//final String Connection = "jdbc:hsqldb:file:data/Timer";
-    	//final String UserName = "SA";
-    	//final String Password = "";
     	
 		Class.forName(JDBCDriver);
 		return DriverManager.getConnection(Connection, Username, Password);
