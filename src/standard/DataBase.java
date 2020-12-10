@@ -12,6 +12,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.InvalidPropertiesFormatException;
@@ -147,12 +148,13 @@ public class DataBase {
 		return DriverManager.getConnection(Connection, Username, Password);
     }
       
-    public static void writeDB (String sql) throws ClassNotFoundException, SQLException {
+    public static Integer writeDB (String sql) throws ClassNotFoundException, SQLException {
 
         Connection con = connectDB();
         Statement stmt = con.createStatement();
         Integer update = stmt.executeUpdate(sql);
         con.close();
+		return update;
     }
     
     private static void initDatabase (Statement stmt) throws SQLException {
@@ -172,7 +174,7 @@ public class DataBase {
         
         createTable = stmt.executeUpdate(sql);
     
-        sql = "CREATE TABLE IF NOT EXISTS TimeSpend ("
+        sql = "CREATE TABLE IF NOT EXISTS TimeSpend (TimeSpendID INTEGER IDENTITY PRIMARY KEY,"
     		+ "Description longvarchar NOT NULL,"
     		+ "ActivityName longvarchar NOT NULL,"
     		+ "TaskID integer,"
@@ -180,6 +182,7 @@ public class DataBase {
     		+ "StartTime time NOT NULL,"
     		+ "EndTime time NOT NULL,"
     		+ "isActive boolean NOT NULL,"
+			+ "isLogging boolean NOT NULL,"
     	    +    "FOREIGN KEY (ActivityName) REFERENCES Activity(ActivityName),"
     	    +    "FOREIGN KEY (TaskID) REFERENCES Task(TaskID))";
     
@@ -216,8 +219,46 @@ public class DataBase {
  		   br.close();
  	   }
     }
+	
+	private static Integer getTimeSpendID (String clause) throws ClassNotFoundException, SQLException {
+		
+		Connection con = connectDB();
+    	Statement stmt = con.createStatement();
+		
+		String sql = "SELECT TimeSpendID FROM TimeSpend WHERE " + clause;
+		
+		ResultSet rs = stmt.executeQuery(sql);
+		
+		Integer ID = -1;
+		
+		while (rs.next()) {
+			ID = rs.getInt("TimeSpendID");
+		}
+		
+		return ID;
+	}
+	
+	public static Time[] getTimeSpend (Integer ID) throws ClassNotFoundException, SQLException{
+		
+        Connection con = connectDB();
+        Statement stmt = con.createStatement();
+		
+		Time[] time = new Time[2];
+		
+		String sql = "SELECT StartTime, EndTime FROM TimeSpend WHERE TimeSpendID = " + ID;
+		System.out.println(sql);
+		
+		ResultSet rs = stmt.executeQuery(sql);
+		while (rs.next()){
+			time[0] = rs.getTime("StartTime");
+			time[1] = rs.getTime("EndTime");
+		}
+		
+		con.close();
+		return time;
+	}
 
-    public static void closeActivityTask (String Activity, String Task) throws ClassNotFoundException, SQLException {
+    public static Integer closeActivityTask (String Activity, String Task) throws ClassNotFoundException, SQLException {
 
         String strTaskID = "TimeSpend.TaskID IS NULL";
         if (Task != null) {
@@ -229,18 +270,21 @@ public class DataBase {
       		     "Date = '" + LocalDate.now() + "' and " + 
       		     strTaskID + " and " + 
       		     "isActive = true;";
-
+				 
+		Integer TimeSpendID = getTimeSpendID("isActive = true and ActivityName = '" + Activity + "' and " + strTaskID);
+				 
 		writeDB(sql);
+		
+		return TimeSpendID;
 
     }
 
     public static String[] checkOpenActivityTask () throws ClassNotFoundException, SQLException {
     	
     	Connection con = connectDB();
-    	
-    	String[] str = new String[3];
-    	
     	Statement stmt = con.createStatement();
+		
+		String[] str = new String[3];
     	
     	String sql = "SELECT ActivityName, Task.TaskName, Description " +
     			     "FROM TimeSpend LEFT JOIN Task ON TimeSpend.TaskID = Task.TaskID " +

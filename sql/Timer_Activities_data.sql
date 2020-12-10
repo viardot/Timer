@@ -15,3 +15,4 @@ INSERT INTO Activity Values  ('Sick', true);
 INSERT INTO Activity Values  ('Study', true);
 INSERT INTO Activity Values  ('Vacation', true);
 INSERT INTO Activity Values  ('Waiting for Work', true);
+INSERT INTO Activity Values  ('Be Informed Modeller', true);

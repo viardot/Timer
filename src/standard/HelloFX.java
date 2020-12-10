@@ -3,6 +3,8 @@ package standard;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Duration;
+import java.sql.Time;
 
 import java.util.List;
 import java.util.Map;
@@ -18,16 +20,19 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
 public class HelloFX extends Application {
-
+    
+	private Map<String, List<String>> Activity = null;
+	
     @Override
     public void start(Stage primaryStage) {
     	
-    	Map<String, List<String>> Activity = DataBase.initiateDate();
+    	Activity = DataBase.initiateDate();
     	
     	primaryStage.setTitle("BearingPoint Caribbean");
         
@@ -37,7 +42,7 @@ public class HelloFX extends Application {
         grid.setVgap(10);
         grid.setPadding(new Insets(25, 25, 25, 25));
 
-        Scene scene = new Scene(grid, 650, 100);
+        Scene scene = new Scene(grid, 700, 100);
         primaryStage.setScene(scene);
 
         ObservableList<String> Activities =
@@ -48,8 +53,7 @@ public class HelloFX extends Application {
         	    
         	final ComboBox<String> cmbBxActivities = new ComboBox<>(Activities);
 			cmbBxActivities.setPromptText("Activity");
-			cmbBxActivities.setEditable(true);
-			cmbBxActivities.setDisable(false);
+			cmbBxActivities.setEditable(true);			
         grid.add(cmbBxActivities, 1, 1);
         
     	    final ComboBox<String> cmbBxTasks = new ComboBox<>();
@@ -61,16 +65,20 @@ public class HelloFX extends Application {
         TextField userTextField = new TextField();
         grid.add(userTextField, 3, 1);
 
+        // label
+		
+		Label lblTimeSpend = new Label("Time spend: ");
+		grid.add(lblTimeSpend, 4, 1);
         
         // Buttons
         
         HBox hbBtn = new HBox(10);
         hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
+		grid.add(hbBtn, 4, 2);
        
         Button btnStart = new Button("Start");
         hbBtn.getChildren().add(btnStart);
-        btnStart.setDisable(true);
-        grid.add(hbBtn, 3, 2);
+        btnStart.setDisable(true);        
         
         Button btnStop = new Button("Stop");
         hbBtn.getChildren().add(btnStop);
@@ -133,24 +141,22 @@ public class HelloFX extends Application {
 					
 					String sql[] = new String[3];
 					
+					//Add new activity with or without a new task to the database
 					if (!Activity.containsKey(cmbBxActivities.getValue())) {
 						sql[0] = "INSERT INTO Activity (ActivityName, isActive) VALUES ('" + cmbBxActivities.getValue() + "', true)";
 						if (cmbBxTasks.getValue() != null) {
 							sql[1] = "INSERT INTO Task (TaskID, TaskName, ActivityName, isActive) VALUES (0,'" + cmbBxTasks.getValue() + "', '" + cmbBxActivities.getValue() + "', true)";
 						}
-					}
-					
-					if (Activity.containsKey(cmbBxActivities.getValue())) {
-                        if(!Activity.get(cmbBxActivities.getValue()).contains(cmbBxTasks.getValue())) {
-					       sql[1] = "INSERT INTO Task (TaskID, TaskName, ActivityName, isActive) VALUES (0,'" + cmbBxTasks.getValue() + "', '" + cmbBxActivities.getValue() + "', true)";
-                           System.out.println(sql[1]);
-						}						
+					} else if (!Activity.get(cmbBxActivities.getValue()).contains(cmbBxTasks.getValue())) {
+						if(cmbBxTasks.getValue() != null){
+ 					        sql[1] = "INSERT INTO Task (TaskID, TaskName, ActivityName, isActive) VALUES (0,'" + cmbBxTasks.getValue() + "', '" + cmbBxActivities.getValue() + "', true)";
+					    }
 					}
 
-                    sql[2] = "INSERT INTO TimeSpend (Description, ActivityName, TaskID, Date, StartTime, EndTime, isActive)\r\n" +
+                    sql[2] = "INSERT INTO TimeSpend (Description, ActivityName, TaskID, Date, StartTime, EndTime, isActive, isLogging)\r\n" +
                              "VALUES ('" + userTextField.getText() + "', '" +  cmbBxActivities.getValue() + "', " +
                              "(SELECT TaskID FROM Task WHERE TaskName = '" + cmbBxTasks.getValue() + "'), '" + LocalDate.now() + "', '" +
-                             LocalTime.now() + "', '" + LocalTime.now() + "', true)";
+                             LocalTime.now() + "', '" + LocalTime.now() + "', true, false)";
 					
 					for(int i = 0; i < sql.length; i++ ){
 						if (sql[i] != null) {	
@@ -163,6 +169,9 @@ public class HelloFX extends Application {
 				            }
 						}
 					}
+					
+					// Reload data from database because new entries have been created. 
+					if (sql[0] != null || sql[1] != null){ Activity = DataBase.initiateDate(); }
 					
                 }
             }
@@ -177,9 +186,12 @@ public class HelloFX extends Application {
                 cmbBxActivities.setDisable(false);
                 cmbBxTasks.setDisable(false);
                 userTextField.setDisable(false);
-
+				
                 try {
-					DataBase.closeActivityTask(cmbBxActivities.getValue(), cmbBxTasks.getValue());
+					Integer TimeSpendID = DataBase.closeActivityTask(cmbBxActivities.getValue(), cmbBxTasks.getValue());
+                    Time[] time = DataBase.getTimeSpend(TimeSpendID);
+					Duration d = Duration.between(time[0].toLocalTime(), time[1].toLocalTime());
+					lblTimeSpend.setText("Time spend: " + d.toHoursPart() + ":" + d.toMinutesPart() + ":" + d.toSecondsPart());
 				} catch (ClassNotFoundException e1) {
 					e1.printStackTrace();
 				} catch (SQLException e1) {
