@@ -1,5 +1,6 @@
 bin/
 build/
+redist/
 .settings/
 data/*
 src/application/

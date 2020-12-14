@@ -32,7 +32,8 @@ public class HelloFX extends Application {
     @Override
     public void start(Stage primaryStage) {
     	
-    	Activity = DataBase.initiateDate();
+		DataBase DB = new DataBase();
+    	Activity = DB.initiateDate();
     	
     	primaryStage.setTitle("BearingPoint Caribbean");
         
@@ -90,7 +91,7 @@ public class HelloFX extends Application {
         
         // Set values with active Activity Task
         try {
-			String[] openActivity = DataBase.checkOpenActivityTask();
+			String[] openActivity = DB.checkOpenActivityTask();
 			if (openActivity[0] != null) {
 				cmbBxActivities.setValue(openActivity[0]);
 				cmbBxActivities.setDisable(true);
@@ -145,11 +146,11 @@ public class HelloFX extends Application {
 					if (!Activity.containsKey(cmbBxActivities.getValue())) {
 						sql[0] = "INSERT INTO Activity (ActivityName, isActive) VALUES ('" + cmbBxActivities.getValue() + "', true)";
 						if (cmbBxTasks.getValue() != null) {
-							sql[1] = "INSERT INTO Task (TaskID, TaskName, ActivityName, isActive) VALUES (0,'" + cmbBxTasks.getValue() + "', '" + cmbBxActivities.getValue() + "', true)";
+							sql[1] = "INSERT INTO Task (TaskName, ActivityName, isActive) VALUES ('" + cmbBxTasks.getValue() + "', '" + cmbBxActivities.getValue() + "', true)";
 						}
 					} else if (!Activity.get(cmbBxActivities.getValue()).contains(cmbBxTasks.getValue())) {
 						if(cmbBxTasks.getValue() != null){
- 					        sql[1] = "INSERT INTO Task (TaskID, TaskName, ActivityName, isActive) VALUES (0,'" + cmbBxTasks.getValue() + "', '" + cmbBxActivities.getValue() + "', true)";
+ 					        sql[1] = "INSERT INTO Task (TaskName, ActivityName, isActive) VALUES ('" + cmbBxTasks.getValue() + "', '" + cmbBxActivities.getValue() + "', true)";
 					    }
 					}
 
@@ -161,7 +162,7 @@ public class HelloFX extends Application {
 					for(int i = 0; i < sql.length; i++ ){
 						if (sql[i] != null) {	
                             try {
-					            DataBase.writeDB(sql[i]);
+					            DB.writeDB(sql[i]);
 				            } catch (ClassNotFoundException e1) {
 					            e1.printStackTrace();
 				            } catch (SQLException e1) {
@@ -171,7 +172,7 @@ public class HelloFX extends Application {
 					}
 					
 					// Reload data from database because new entries have been created. 
-					if (sql[0] != null || sql[1] != null){ Activity = DataBase.initiateDate(); }
+					if (sql[0] != null || sql[1] != null){ Activity = DB.initiateDate(); }
 					
                 }
             }
@@ -188,8 +189,8 @@ public class HelloFX extends Application {
                 userTextField.setDisable(false);
 				
                 try {
-					Integer TimeSpendID = DataBase.closeActivityTask(cmbBxActivities.getValue(), cmbBxTasks.getValue());
-                    Time[] time = DataBase.getTimeSpend(TimeSpendID);
+					Integer TimeSpendID = DB.closeActivityTask(cmbBxActivities.getValue(), cmbBxTasks.getValue());
+                    Time[] time = DB.getTimeSpend(TimeSpendID);
 					Duration d = Duration.between(time[0].toLocalTime(), time[1].toLocalTime());
 					lblTimeSpend.setText("Time spend: " + d.toHoursPart() + ":" + d.toMinutesPart() + ":" + d.toSecondsPart());
 				} catch (ClassNotFoundException e1) {
@@ -205,7 +206,7 @@ public class HelloFX extends Application {
         	@Override
         	public void handle(ActionEvent e) {
         		try {
-					DataBase.openDBManager();
+					DB.openDBManager();
 				} catch (ClassNotFoundException | SQLException e1) {
 					e1.printStackTrace();
 				}

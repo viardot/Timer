@@ -29,14 +29,14 @@ import org.hsqldb.util.DatabaseManagerSwing;
 
 public class DataBase {
 	
-	private static String ActivityDB = null;
-	private static String TaskDB     = null;
-	private static String JDBCDriver = null;
-	private static String Connection = null;
-	private static String Username   = null;
-	private static String Password   = null;
+	private String ActivityDB = null;
+	private String TaskDB     = null;
+	private String JDBCDriver = null;
+	private String Connection = null;
+	private String Username   = null;
+	private String Password   = null;
 	
-    public static Map<String, List<String>> initiateDate () {
+    public Map<String, List<String>> initiateDate () {
 	    Connection con = null;
 	    Statement stmt = null;
 	    
@@ -62,13 +62,6 @@ public class DataBase {
 			    	// Fill the database with content
 			    	loadInitialData(con, ActivityDB);
 			    	loadInitialData(con, TaskDB);
-			    	
-			       	// Removing the dummy entries
-			       	sql = "DELETE FROM Task WHERE ActivityName = 'Dummy'";
-			       	Integer deleteDummy = stmt.executeUpdate(sql);
-			    	
-			       	sql = "DELETE FROM Activity WHERE ActivityName = 'Dummy'";
-			       	deleteDummy = stmt.executeUpdate(sql);
 			    }
 			    
 			    // Close open Activities more than a day old
@@ -114,7 +107,7 @@ public class DataBase {
 	    return Activity;
      }
 
-	private static void getProperties() {
+	private void getProperties() {
 		
 		Properties prop = new Properties();
 		String fileName = "./resources/config.xml";
@@ -142,13 +135,13 @@ public class DataBase {
         Password   = prop.getProperty("Password");
 	}
 
-    private static Connection connectDB () throws ClassNotFoundException, SQLException {
+    private Connection connectDB () throws ClassNotFoundException, SQLException {
     	
 		Class.forName(JDBCDriver);
 		return DriverManager.getConnection(Connection, Username, Password);
     }
       
-    public static Integer writeDB (String sql) throws ClassNotFoundException, SQLException {
+    public Integer writeDB (String sql) throws ClassNotFoundException, SQLException {
 
         Connection con = connectDB();
         Statement stmt = con.createStatement();
@@ -157,7 +150,7 @@ public class DataBase {
 		return update;
     }
     
-    private static void initDatabase (Statement stmt) throws SQLException {
+    private void initDatabase (Statement stmt) throws SQLException {
 
         // Create tables if not exists
         String sql = "CREATE TABLE IF NOT EXISTS Activity ("
@@ -166,7 +159,7 @@ public class DataBase {
 
         Integer createTable = stmt.executeUpdate(sql);
     
-        sql = "CREATE TABLE IF NOT EXISTS Task (TaskID integer NOT NULL PRIMARY KEY,"
+        sql = "CREATE TABLE IF NOT EXISTS Task (TaskID INTEGER IDENTITY PRIMARY KEY,"
     		+ "	TaskName longvarchar NOT NULL,"
     		+ "	ActivityName longvarchar NOT NULL,"
     		+ "	isActive boolean NOT NULL,"
@@ -187,20 +180,7 @@ public class DataBase {
     	    +    "FOREIGN KEY (TaskID) REFERENCES Task(TaskID))";
     
         createTable = stmt.executeUpdate(sql);
-    
-        sql = "INSERT INTO Activity Values  ('Dummy', false)";
-        Integer insertDummy = stmt.executeUpdate(sql);
-    
-        sql = "INSERT INTO Task Values (0, 'Dummy', 'Dummy', false)";
-        insertDummy = stmt.executeUpdate(sql);
-
-    	sql= "CREATE TRIGGER UniqueTaskKey\r\n" +
-       	     "BEFORE INSERT on Task\r\n" + 
-       	     "REFERENCING NEW AS newrow FOR EACH ROW\r\n" +
-       	     "BEGIN ATOMIC\r\n" +
-       	     "SET newrow.TaskID = SELECT MAX(TaskID)+1 FROM Task;\r\n" +
-       	     "END";
-       	Integer insertTrigger = stmt.executeUpdate(sql);       	
+     	
     }
 
     private static void loadInitialData (Connection con, String file) throws IOException, SQLException {
@@ -219,26 +199,34 @@ public class DataBase {
  		   br.close();
  	   }
     }
-	
-	private static Integer getTimeSpendID (String clause) throws ClassNotFoundException, SQLException {
+		
+	private Integer getID (String Table, String clause) throws ClassNotFoundException, SQLException {
 		
 		Connection con = connectDB();
     	Statement stmt = con.createStatement();
 		
-		String sql = "SELECT TimeSpendID FROM TimeSpend WHERE " + clause;
-		
-		ResultSet rs = stmt.executeQuery(sql);
-		
+		String column = null;
 		Integer ID = -1;
 		
+		String sql = "SELECT Column_Name  FROM information_schema.columns WHERE Table_Name = '" + Table.toUpperCase() + "' and Is_Identity = 'YES'";
+		ResultSet rs = stmt.executeQuery(sql);
+
 		while (rs.next()) {
-			ID = rs.getInt("TimeSpendID");
+			column = rs.getString("Column_name");
 		}
 		
+		if (column != null) { 
+		    sql = "SELECT " + column + " FROM " + Table + " WHERE " + clause;
+		    rs = stmt.executeQuery(sql);
+
+		    while (rs.next()) {
+			   ID = rs.getInt(column);
+		    }
+		}
 		return ID;
 	}
 	
-	public static Time[] getTimeSpend (Integer ID) throws ClassNotFoundException, SQLException{
+	public Time[] getTimeSpend (Integer ID) throws ClassNotFoundException, SQLException{
 		
         Connection con = connectDB();
         Statement stmt = con.createStatement();
@@ -246,7 +234,6 @@ public class DataBase {
 		Time[] time = new Time[2];
 		
 		String sql = "SELECT StartTime, EndTime FROM TimeSpend WHERE TimeSpendID = " + ID;
-		System.out.println(sql);
 		
 		ResultSet rs = stmt.executeQuery(sql);
 		while (rs.next()){
@@ -258,7 +245,7 @@ public class DataBase {
 		return time;
 	}
 
-    public static Integer closeActivityTask (String Activity, String Task) throws ClassNotFoundException, SQLException {
+    public Integer closeActivityTask (String Activity, String Task) throws ClassNotFoundException, SQLException {
 
         String strTaskID = "TimeSpend.TaskID IS NULL";
         if (Task != null) {
@@ -271,7 +258,7 @@ public class DataBase {
       		     strTaskID + " and " + 
       		     "isActive = true;";
 				 
-		Integer TimeSpendID = getTimeSpendID("isActive = true and ActivityName = '" + Activity + "' and " + strTaskID);
+		Integer TimeSpendID = getID("TimeSpend", "isActive = true and ActivityName = '" + Activity + "' and " + strTaskID);
 				 
 		writeDB(sql);
 		
@@ -279,7 +266,7 @@ public class DataBase {
 
     }
 
-    public static String[] checkOpenActivityTask () throws ClassNotFoundException, SQLException {
+    public String[] checkOpenActivityTask () throws ClassNotFoundException, SQLException {
     	
     	Connection con = connectDB();
     	Statement stmt = con.createStatement();
@@ -301,7 +288,7 @@ public class DataBase {
     	return str;
     }
 
-    public static void openDBManager () throws ClassNotFoundException, SQLException {
+    public void openDBManager () throws ClassNotFoundException, SQLException {
         String[] args = { "--user", "SA", "--url", "jdbc:hsqldb:file:./data/Timer"};
         DatabaseManagerSwing.main(args);    	
     }
