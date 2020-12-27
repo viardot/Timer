@@ -2,7 +2,6 @@ package standard;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.BufferedReader;
@@ -29,12 +28,17 @@ import org.hsqldb.util.DatabaseManagerSwing;
 
 public class DataBase {
 	
-	private String ActivityDB = null;
-	private String TaskDB     = null;
-	private String JDBCDriver = null;
-	private String Connection = null;
-	private String Username   = null;
-	private String Password   = null;
+	private String propertyFile = null;
+	private String ActivityDB   = null;
+	private String TaskDB       = null;
+	private String JDBCDriver   = null;
+	private String Connection   = null;
+	private String Username     = null;
+	private String Password     = null;
+	
+	public DataBase(String propertyFile) {
+		this.propertyFile = propertyFile;
+	}
 	
     public Map<String, List<String>> initiateDate () {
 	    Connection con = null;
@@ -110,12 +114,10 @@ public class DataBase {
 	private void getProperties() {
 		
 		Properties prop = new Properties();
-		String fileName = "./resources/config.xml";
-
 		
 		InputStream in;
 		try {
-			in = new FileInputStream(fileName);
+			in = new FileInputStream(propertyFile);
 			if (in != null) {
 				prop.loadFromXML(in);
 			}

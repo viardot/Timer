@@ -32,7 +32,7 @@ public class HelloFX extends Application {
     @Override
     public void start(Stage primaryStage) {
     	
-		DataBase DB = new DataBase();
+		DataBase DB = new DataBase("./resources/config.xml");
     	Activity = DB.initiateDate();
     	
     	primaryStage.setTitle("BearingPoint Caribbean");
