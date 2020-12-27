@@ -12,8 +12,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Duration;
+
 import java.util.InvalidPropertiesFormatException;
 import java.util.Properties;
 import java.util.ArrayList;
@@ -21,8 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hsqldb.cmdline.SqlFile;
-import org.hsqldb.cmdline.SqlToolError;								  								   
 import org.hsqldb.util.DatabaseManagerSwing;
 
 
@@ -143,12 +144,18 @@ public class DataBase {
 		return DriverManager.getConnection(Connection, Username, Password);
     }
       
-    public Integer writeDB (String sql) throws ClassNotFoundException, SQLException {
-
-        Connection con = connectDB();
-        Statement stmt = con.createStatement();
-        Integer update = stmt.executeUpdate(sql);
-        con.close();
+    public Integer writeDB (String sql) {
+		
+		Integer update = -1;
+        
+		try {
+            Connection con = connectDB();
+            Statement stmt = con.createStatement();
+            update = stmt.executeUpdate(sql);
+            con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+        }
 		return update;
     }
     
@@ -228,28 +235,48 @@ public class DataBase {
 		return ID;
 	}
 	
-	public Time[] getTimeSpend (Integer ID) throws ClassNotFoundException, SQLException{
+	public Duration getTimeSpend (Integer ID){
 		
-        Connection con = connectDB();
-        Statement stmt = con.createStatement();
-		
+        Connection con = null;
 		Time[] time = new Time[2];
 		
-		String sql = "SELECT StartTime, EndTime FROM TimeSpend WHERE TimeSpendID = " + ID;
-		
-		ResultSet rs = stmt.executeQuery(sql);
-		while (rs.next()){
-			time[0] = rs.getTime("StartTime");
-			time[1] = rs.getTime("EndTime");
+		try {
+    	    con = connectDB();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		
-		con.close();
-		return time;
+		if (con != null) {
+			
+			String sql = "SELECT StartTime, EndTime FROM TimeSpend WHERE TimeSpendID = " + ID;
+			try {
+               Statement stmt = con.createStatement();
+			   ResultSet rs = stmt.executeQuery(sql);
+		       while (rs.next()){
+			       time[0] = rs.getTime("StartTime");
+			       time[1] = rs.getTime("EndTime");
+		        }
+			} catch (SQLException se) {
+				se.printStackTrace();
+			} finally {
+				try {
+				    con.close();
+				} catch (SQLException se) {
+					se.printStackTrace();
+				}
+			}
+		}
+        
+		Duration d = Duration.between(time[0].toLocalTime(), time[1].toLocalTime());
+		
+		return d;
 	}
 
-    public Integer closeActivityTask (String Activity, String Task) throws ClassNotFoundException, SQLException {
+    public Integer closeActivityTask (String Activity, String Task) {
 
         String strTaskID = "TimeSpend.TaskID IS NULL";
+		Integer TimeSpendID = -1;
+		
         if (Task != null) {
             strTaskID = "TimeSpend.TaskID = (SELECT TaskID FROM TASK WHERE Taskname = '" + Task + "')";
         }
@@ -259,8 +286,12 @@ public class DataBase {
       		     "Date = '" + LocalDate.now() + "' and " + 
       		     strTaskID + " and " + 
       		     "isActive = true;";
-				 
-		Integer TimeSpendID = getID("TimeSpend", "isActive = true and ActivityName = '" + Activity + "' and " + strTaskID);
+				
+		try {
+		    TimeSpendID = getID("TimeSpend", "isActive = true and ActivityName = '" + Activity + "' and " + strTaskID);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 				 
 		writeDB(sql);
 		
@@ -268,30 +299,46 @@ public class DataBase {
 
     }
 
-    public String[] checkOpenActivityTask () throws ClassNotFoundException, SQLException {
-    	
-    	Connection con = connectDB();
-    	Statement stmt = con.createStatement();
+    public String[] checkOpenActivityTask () {
 		
-		String[] str = new String[3];
+		Connection con = null;
+        String[] str = new String[3];
     	
-    	String sql = "SELECT ActivityName, Task.TaskName, Description " +
+		try {
+    	    con = connectDB();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		if (con != null) {
+
+    	    String sql = "SELECT ActivityName, Task.TaskName, Description " +
     			     "FROM TimeSpend LEFT JOIN Task ON TimeSpend.TaskID = Task.TaskID " +
     			     "WHERE isActive= true and Date = '"+ LocalDate.now() +"' and StartTime = (SELECT max(StartTime) FROM TimeSpend)";
-    	ResultSet rs = stmt.executeQuery(sql);
-    	while (rs.next()) {
-    		str[0] = rs.getString(1);
-    		str[1] = rs.getString(2);
-    		str[2] = rs.getString(3);
-    	}
-    		
-    	con.close();
+    	
+		    try {
+    	        Statement stmt = con.createStatement();
+		        ResultSet rs = stmt.executeQuery(sql);
+    	        while (rs.next()) {
+    		        str[0] = rs.getString(1);
+    		        str[1] = rs.getString(2);
+    		        str[2] = rs.getString(3);
+    	        }
+                con.close();
+		    } catch (SQLException se) {
+			    se.printStackTrace();
+		    }
+		}
         
     	return str;
     }
 
-    public void openDBManager () throws ClassNotFoundException, SQLException {
+    public void openDBManager () {
         String[] args = { "--user", "SA", "--url", "jdbc:hsqldb:file:./data/Timer"};
-        DatabaseManagerSwing.main(args);    	
+		try {
+            DatabaseManagerSwing.main(args);
+		} catch (Exception e){
+			e.printStackTrace();
+		}			
     }
 }
