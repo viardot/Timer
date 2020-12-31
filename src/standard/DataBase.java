@@ -29,75 +29,94 @@ import org.hsqldb.util.DatabaseManagerSwing;
 
 public class DataBase {
 	
-	private String propertyFile = null;
-	private String ActivityDB   = null;
-	private String TaskDB       = null;
-	private String JDBCDriver   = null;
-	private String Connection   = null;
-	private String Username     = null;
-	private String Password     = null;
-	
+
+	private String propertyFile = null;	
+	private String ActivityDB = null;
+	private String TaskDB     = null;
+	private String JDBCDriver = null;
+	private String Connection = null;
+	private String Username   = null;
+	private String Password   = null;
+
+					   
+ 
+									
+									
+									
+									
+									
+									
+									
+ 
 	public DataBase(String propertyFile) {
 		this.propertyFile = propertyFile;
+		getProperties();
 	}
 	
-    public Map<String, List<String>> initiateDate () {
+	public Map<String, List<String>> initiateData () {	
 	    Connection con = null;
 	    Statement stmt = null;
-	    
-	    Map<String, List<String>> Activity = new HashMap<>();
+		
+		Map<String, List<String>> Activity = new HashMap<>();
 	    List<String> Task;
 		
-		getProperties();
-			    
-	    try {
+				  
+	   
+        try {
 			
-	    	con = connectDB ();
-	    	
+			con = connectDB();
+			
+						 
+	  
 			if (con != null) {
+				
+				stmt = con.createStatement();
+				
+				String sql ="SELECT TABLE_NAME FROM INFORMATION_SCHEMA.SYSTEM_TABLES WHERE TABLE_NAME = 'ACTIVITY'";
 			    
-			    stmt = con.createStatement();
-			    // Check if a table Activity exists. If not create the tables Activity; Task; Timespend.
-			    String sql ="SELECT TABLE_NAME FROM INFORMATION_SCHEMA.SYSTEM_TABLES WHERE TABLE_NAME = 'ACTIVITY'";
-			    
-			    ResultSet rs = stmt.executeQuery(sql);
-			    
+				ResultSet rs = getResultSet(con, sql);
+				
+				//  change initDatabase such that is excepts Connection
+	   
+											 
+	   
 			    if (!rs.next()) {
-			    	initDatabase(stmt);
+			    	initDatabase(con);
 			    	// Fill the database with content
 			    	loadInitialData(con, ActivityDB);
 			    	loadInitialData(con, TaskDB);
 			    }
-			    
-			    // Close open Activities more than a day old
+				
+				// Close open Activities more than a day old. Do not use writeDB because that will openen a new connection to the db.
 			    sql = "UPDATE TimeSpend SET isActive = false WHERE isActive = true and Date <> '" + LocalDate.now() + "'";
 			    
-			    Integer updateOldRecords = stmt.executeUpdate(sql);
-			    
+			    Integer updateOldRecords = stmt.executeUpdate(sql);			 
+				
 			    // Query the database
 			    sql = "SELECT ActivityName FROM Activity WHERE isActive = true";
 
-			    rs = stmt.executeQuery(sql);
+				rs = getResultSet(con, sql);
                 
 			    while (rs.next()) {
 			    	Task = new ArrayList<>();
 			    	Activity.put(rs.getString("ActivityName"), Task);
 			    }
-			    
-			    sql = "SELECT ActivityName, TaskName FROM Activity, Task WHERE Activity.ActivityName = Task.ActivityName and Task.isActive = true ORDER BY ActivityName"; 
-			    rs = stmt.executeQuery(sql);
+				
+				sql = "SELECT ActivityName, TaskName FROM Activity, Task WHERE Activity.ActivityName = Task.ActivityName and Task.isActive = true ORDER BY ActivityName"; 
+				rs = getResultSet(con, sql);
 			    while(rs.next()) {
                   Activity.get(rs.getString("ActivityName")).add(rs.getString("TaskName"));			    	
 			    }
 			    rs.close();
-			    
+				
 			} else {
-			    System.out.println("Problem with creating connection");
+				System.out.println("Problem with creating connection");
 			}
-			      
-	    } catch (Exception e) {
-	        e.printStackTrace(System.out);
-	    } finally {
+
+			
+        } catch (Exception e) {
+            e.printStackTrace(System.out);
+        } finally {
 	    	try { 
 	    		if (stmt != null) con.close();
 	    	} catch (SQLException se){
@@ -108,11 +127,11 @@ public class DataBase {
 	    	} catch (SQLException se){
 	    		se.printStackTrace();
 	    	}
-	    }
-	    return Activity;
-     }
+		}
+		return Activity;
+    }
 
-	private void getProperties() {
+    private final void getProperties() {
 		
 		Properties prop = new Properties();
 		
@@ -137,29 +156,29 @@ public class DataBase {
         Username   = prop.getProperty("Username");
         Password   = prop.getProperty("Password");
 	}
-
-    private Connection connectDB () throws ClassNotFoundException, SQLException {
+	
+	private Connection connectDB () throws ClassNotFoundException, SQLException {
     	
 		Class.forName(JDBCDriver);
 		return DriverManager.getConnection(Connection, Username, Password);
     }
-      
-    public Integer writeDB (String sql) {
+	
+	private void initDatabase (Connection con) throws SQLException {
+
+        Statement stmt = con.createStatement();
 		
-		Integer update = -1;
-        
-		try {
-            Connection con = connectDB();
-            Statement stmt = con.createStatement();
-            update = stmt.executeUpdate(sql);
-            con.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-        }
-		return update;
-    }
-    
-    private void initDatabase (Statement stmt) throws SQLException {
+	   
+										 
+												   
+											 
+						
+						 
+					   
+		 
+				
+	 
+	
+																	
 
         // Create tables if not exists
         String sql = "CREATE TABLE IF NOT EXISTS Activity ("
@@ -189,10 +208,10 @@ public class DataBase {
     	    +    "FOREIGN KEY (TaskID) REFERENCES Task(TaskID))";
     
         createTable = stmt.executeUpdate(sql);
-     	
+ 	
     }
 
-    private static void loadInitialData (Connection con, String file) throws IOException, SQLException {
+    private void loadInitialData (Connection con, String file) throws IOException, SQLException {
         Statement stmt = con.createStatement();
         BufferedReader br = null;
         try {
@@ -208,17 +227,17 @@ public class DataBase {
  		   br.close();
  	   }
     }
-		
+
 	private Integer getID (String Table, String clause) throws ClassNotFoundException, SQLException {
 		
 		Connection con = connectDB();
-    	Statement stmt = con.createStatement();
+											
 		
 		String column = null;
 		Integer ID = -1;
 		
 		String sql = "SELECT Column_Name  FROM information_schema.columns WHERE Table_Name = '" + Table.toUpperCase() + "' and Is_Identity = 'YES'";
-		ResultSet rs = stmt.executeQuery(sql);
+		ResultSet rs = getResultSet(con, sql);
 
 		while (rs.next()) {
 			column = rs.getString("Column_name");
@@ -226,7 +245,7 @@ public class DataBase {
 		
 		if (column != null) { 
 		    sql = "SELECT " + column + " FROM " + Table + " WHERE " + clause;
-		    rs = stmt.executeQuery(sql);
+			rs = getResultSet(con, sql);
 
 		    while (rs.next()) {
 			   ID = rs.getInt(column);
@@ -234,6 +253,33 @@ public class DataBase {
 		}
 		return ID;
 	}
+
+    private ResultSet getResultSet (Connection con, String sql) throws SQLException {
+
+		return con.createStatement().executeQuery(sql);
+	
+	}
+
+    public Integer writeDB (String sql) {
+		
+		Connection con = null;
+		Integer update = -1;
+        
+		try {
+            con = connectDB();
+            Statement stmt = con.createStatement();
+            update = stmt.executeUpdate(sql);
+		} catch (Exception e) {
+			e.printStackTrace();
+        } finally {
+			try {
+			    con.close();
+			} catch (SQLException se) { 
+			   se.printStackTrace(); 
+			}
+		}
+		return update;
+    }
 	
 	public Duration getTimeSpend (Integer ID){
 		
@@ -250,8 +296,8 @@ public class DataBase {
 			
 			String sql = "SELECT StartTime, EndTime FROM TimeSpend WHERE TimeSpendID = " + ID;
 			try {
-               Statement stmt = con.createStatement();
-			   ResultSet rs = stmt.executeQuery(sql);
+													  
+			   ResultSet rs = getResultSet(con, sql);
 		       while (rs.next()){
 			       time[0] = rs.getTime("StartTime");
 			       time[1] = rs.getTime("EndTime");
@@ -317,8 +363,8 @@ public class DataBase {
     			     "WHERE isActive= true and Date = '"+ LocalDate.now() +"' and StartTime = (SELECT max(StartTime) FROM TimeSpend)";
     	
 		    try {
-    	        Statement stmt = con.createStatement();
-		        ResultSet rs = stmt.executeQuery(sql);
+													
+				ResultSet rs = getResultSet(con, sql);
     	        while (rs.next()) {
     		        str[0] = rs.getString(1);
     		        str[1] = rs.getString(2);

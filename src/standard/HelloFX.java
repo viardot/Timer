@@ -31,7 +31,7 @@ public class HelloFX extends Application {
     public void start(Stage primaryStage) {
     	
 		DataBase DB = new DataBase("./resources/config.xml");
-    	Activity = DB.initiateDate();
+    	Activity = DB.initiateData();
     	
     	primaryStage.setTitle("BearingPoint Caribbean");
         
@@ -158,7 +158,7 @@ public class HelloFX extends Application {
 					}
 					
 					// Reload data from database because new entries have been created. 
-					if (sql[0] != null || sql[1] != null) Activity = DB.initiateDate();
+					if (sql[0] != null || sql[1] != null) Activity = DB.initiateData();
 					
                 }
             }
