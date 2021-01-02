@@ -137,6 +137,9 @@ public class HelloFX extends Application {
 					String sql[] = new String[3];
 					
 					//Add new activity with or without a new task to the database
+					//All Activity- and Task names are going to be trimmed. 
+					cmbBxActivities.setValue(cmbBxActivities.getValue().trim());
+					cmbBxTasks.setValue(cmbBxTasks.getValue().trim());
 					if (!Activity.containsKey(cmbBxActivities.getValue())) {
 						sql[0] = "INSERT INTO Activity (ActivityName, isActive) VALUES ('" + cmbBxActivities.getValue() + "', true)";
 						if (cmbBxTasks.getValue() != null) {
