@@ -166,19 +166,6 @@ public class DataBase {
 	private void initDatabase (Connection con) throws SQLException {
 
         Statement stmt = con.createStatement();
-		
-	   
-										 
-												   
-											 
-						
-						 
-					   
-		 
-				
-	 
-	
-																	
 
         // Create tables if not exists
         String sql = "CREATE TABLE IF NOT EXISTS Activity ("
@@ -360,8 +347,7 @@ public class DataBase {
 
     	    String sql = "SELECT ActivityName, Task.TaskName, Description " +
     			     "FROM TimeSpend LEFT JOIN Task ON TimeSpend.TaskID = Task.TaskID " +
-    			     "WHERE isActive= true and Date = '"+ LocalDate.now() +"' and StartTime = (SELECT max(StartTime) FROM TimeSpend)";
-    	
+    			     "WHERE isActive= true and Date = '"+ LocalDate.now() +"' and StartTime = (SELECT max(StartTime) FROM TimeSpend WHERE Date ='" +LocalDate.now()+"')";
 		    try {
 													
 				ResultSet rs = getResultSet(con, sql);
@@ -370,13 +356,17 @@ public class DataBase {
     		        str[1] = rs.getString(2);
     		        str[2] = rs.getString(3);
     	        }
-                con.close();
 		    } catch (SQLException se) {
 			    se.printStackTrace();
-		    }
+		    } finally {
+				try {
+				  con.close();
+				} catch (SQLException se) {
+					se.printStackTrace();
+				}
+			}
 		}
-        
-    	return str;
+        return str;
     }
 
     public void openDBManager () {
