@@ -1,4 +1,4 @@
-package standard;
+package backend;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -26,9 +26,7 @@ import java.util.Map;
 
 import org.hsqldb.util.DatabaseManagerSwing;
 
-
 public class DataBase {
-	
 
 	private String propertyFile = null;	
 	private String ActivityDB = null;
@@ -38,16 +36,6 @@ public class DataBase {
 	private String Username   = null;
 	private String Password   = null;
 
-					   
- 
-									
-									
-									
-									
-									
-									
-									
- 
 	public DataBase(String propertyFile) {
 		this.propertyFile = propertyFile;
 		getProperties();
@@ -59,14 +47,10 @@ public class DataBase {
 		
 		Map<String, List<String>> Activity = new HashMap<>();
 	    List<String> Task;
-		
-				  
 	   
         try {
 			
 			con = connectDB();
-			
-						 
 	  
 			if (con != null) {
 				
@@ -77,8 +61,6 @@ public class DataBase {
 				ResultSet rs = getResultSet(con, sql);
 				
 				//  change initDatabase such that is excepts Connection
-	   
-											 
 	   
 			    if (!rs.next()) {
 			    	initDatabase(con);
