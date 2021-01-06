@@ -8,9 +8,10 @@ The assumption is that you will only be working on one task at the time. Therefo
 
 
 If you have HSQLDB on c:\hsqldb-2.5.1 JavaFX on c:\javafx-sdk-15.0.1 then from the root of the app path the following commands can be used to compile and run the application.
-
+consolidate:
+dir /s /B *java > sources.txt
 compile:
-javac -d dist -classpath c:\hsqldb-2.5.1\hsqldb\lib\\* --module-path c:\javafx-sdk-15.0.1\lib --add-modules javafx.controls standard\\*.java
+javac -d dist -classpath c:\hsqldb-2.5.1\hsqldb\lib\\* --module-path c:\javafx-sdk-15.0.1\lib --add-modules javafx.controls @sources.txt
 
 run:
-java -classpath .\dist;c:\hsqldb-2.5.1\hsqldb\lib\\* --module-path c:\javafx-sdk-15.0.1\lib --add-modules javafx.controls standard.HelloFX
+java -classpath .\dist;c:\hsqldb-2.5.1\hsqldb\lib\\* --module-path c:\javafx-sdk-15.0.1\lib --add-modules javafx.controls frontend.timer.HelloFX
