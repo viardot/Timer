@@ -182,9 +182,7 @@ public class DataBase {
 
     private void loadInitialData (Connection con, String file) throws IOException, SQLException {
         Statement stmt = con.createStatement();
-        BufferedReader br = null;
-        try {
- 	       br = new BufferedReader(new FileReader(file));
+        try (BufferedReader br = new BufferedReader(new FileReader(file))){
  	       String sql = br.readLine();
  	       while (sql != null) {
  	           stmt.executeQuery(sql);
@@ -192,8 +190,6 @@ public class DataBase {
  	       }
  	   } catch (FileNotFoundException e) {
  	       e.printStackTrace();
- 	   } finally {
- 		   br.close();
  	   }
     }
 
@@ -350,6 +346,75 @@ public class DataBase {
 		}
         return str;
     }
+
+	public ByteArrayInputStream getTimeSpendObject (Integer i, String str){
+		
+		String sql = null;
+		// i = amount of elements that is in the tasklist of the activity. If no elements in the task list, then do not try to get it from the db.
+		if (i == 0) {
+			sql = "SELECT TIMESPENDID, TIMESPEND.ACTIVITYNAME, DESCRIPTION, DATE, STARTTIME, ENDTIME FROM TIMESPEND WHERE ACTIVITYNAME = '" + str +"'"; 
+		} else {
+			sql = "SELECT TIMESPENDID, TIMESPEND.ACTIVITYNAME, TASKNAME, DESCRIPTION, DATE, STARTTIME, ENDTIME FROM TIMESPEND, TASK WHERE ACTIVITYNAME = '" + str +"' and TIMESPEND.TASKID = TASK.TASKID"; 
+		}
+				
+		List<Datastore> TimeSpendArray = new ArrayList<Datastore>();
+		
+		Connection con = null;
+			
+		try {
+    	    con = connectDB();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		ByteArrayInputStream bains = null;
+		if (con != null) {
+		
+		    try {
+				ResultSet rs = getResultSet(con, sql);
+				if (i == 0){
+					while (rs.next()) {
+					Datastore DS = new Datastore(rs.getInt("TimespendID"), rs.getString("ActivityName"),
+                                                                           null,					
+																		   rs.getString("Description"), 
+																		   rs.getObject("Date", LocalDate.class), 
+																		   rs.getObject("StartTime", LocalTime.class), 
+																		   rs.getObject("StartTime", LocalTime.class));
+				    TimeSpendArray.add(DS);
+    	          }
+				} else {
+    	          while (rs.next()) {
+					Datastore DS = new Datastore(rs.getInt("TimespendID"), rs.getString("ActivityName"),  
+					                                                       rs.getString("TaskName"),  
+																		   rs.getString("Description"), 
+																		   rs.getObject("Date", LocalDate.class), 
+																		   rs.getObject("StartTime", LocalTime.class), 
+																		   rs.getObject("StartTime", LocalTime.class));
+				    TimeSpendArray.add(DS);
+    	          }
+				}
+				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+					try {
+                       ObjectOutputStream oos = new ObjectOutputStream(buffer);						
+					   oos.writeObject(TimeSpendArray);
+					   oos.close();
+		            }catch (IOException ex) {
+			            ex.printStackTrace();
+		            }
+					
+			    bains = new ByteArrayInputStream(buffer.toByteArray());
+				
+		    } catch (SQLException se) {
+			    se.printStackTrace();
+		    } finally {
+				try {
+				  con.close();
+				} catch (SQLException se) {
+					se.printStackTrace();
+				}
+			}
+		}
+        return bains;		
+	}
 
     public void openDBManager () {
         String[] args = { "--user", "SA", "--url", "jdbc:hsqldb:file:./data/Timer"};

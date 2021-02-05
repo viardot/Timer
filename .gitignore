@@ -1,5 +1,6 @@
 bin/
 build/
+dist/
 redist/
 .settings/
 data/*
@@ -7,3 +8,5 @@ src/application/
 /build.fxbuild
 /.classpath
 /.project
+/steps2compile.txt
+src/sources.txt
